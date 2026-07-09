@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <p class="identity">posting as {{ username }}</p>
+  <p class="journal-note">this journal is private — only you can see it.</p>
+
+  <form method="POST" action="/journal/add" class="post-form">
+    <select name="category" required>
+      {% for key, prompt in categories.items() %}
+        <option value="{{ key }}">{{ prompt }}</option>
+      {% endfor %}
+    </select>
+    <textarea name="body" placeholder="write a sentence or two..." required></textarea>
+    <button type="submit">save entry</button>
+  </form>
+
+  <div class="feed">
+    {% for entry in entries %}
+      <div class="post-card">
+        <p class="post-meta">{{ categories[entry.category] }} · {{ entry.created_at.strftime('%b %d') }}</p>
+        <p class="post-body">{{ entry.body }}</p>
+      </div>
+    {% else %}
+      <p class="placeholder">no entries yet — start with one good thing from today.</p>
+    {% endfor %}
+  </div>
+{% endblock %}

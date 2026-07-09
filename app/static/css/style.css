@@ -145,3 +145,25 @@
   font-size: 14px;
   text-decoration: none;
 }
+.nav {
+  display: flex;
+  gap: 16px;
+}
+
+.nav a {
+  font-size: 13px;
+  color: #5F5E5A;
+  text-decoration: none;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.journal-note {
+  font-size: 13px;
+  color: #888780;
+  margin: -4px 0 16px;
+}

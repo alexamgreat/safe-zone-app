@@ -1,9 +1,10 @@
 from flask import Flask, render_template, request, redirect, flash
 from config import Config
-from app.models import db, Post, Encouragement
+from app.models import db, Post, Encouragement, JournalEntry
 from app.auth import get_or_create_user
 from app.moderation import is_supportive
 from app.crisis import check_for_crisis
+from app.journal import CATEGORIES
 
 
 def create_app():
@@ -55,5 +56,33 @@ def create_app():
         db.session.add(encouragement)
         db.session.commit()
         return redirect("/")
+
+    @app.route("/journal")
+    def journal():
+        user = get_or_create_user()
+        entries = (
+            JournalEntry.query.filter_by(user_id=user.id)
+            .order_by(JournalEntry.created_at.desc())
+            .all()
+        )
+        return render_template(
+            "journal.html", username=user.username, entries=entries, categories=CATEGORIES
+        )
+
+    @app.route("/journal/add", methods=["POST"])
+    def add_journal_entry():
+        user = get_or_create_user()
+        category = request.form.get("category")
+        body = request.form.get("body", "").strip()
+
+        if body and category in CATEGORIES:
+            entry = JournalEntry(user_id=user.id, category=category, body=body)
+            db.session.add(entry)
+            db.session.commit()
+
+            if check_for_crisis(body):
+                return render_template("crisis_resources.html")
+
+        return redirect("/journal")
 
     return app
