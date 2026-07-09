@@ -167,3 +167,22 @@
   color: #888780;
   margin: -4px 0 16px;
 }
+.reactions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.reaction-form button {
+  font-size: 12px;
+  padding: 6px 10px;
+  border: 1px solid #D3D1C7;
+  border-radius: 20px;
+  background: white;
+  cursor: pointer;
+}
+
+.reaction-form button:hover {
+  background: #F1EFE8;
+}

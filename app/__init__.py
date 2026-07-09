@@ -1,10 +1,16 @@
 from flask import Flask, render_template, request, redirect, flash
 from config import Config
-from app.models import db, Post, Encouragement, JournalEntry
+from app.models import db, Post, Encouragement, EncouragementReaction, JournalEntry
 from app.auth import get_or_create_user
 from app.moderation import is_supportive
 from app.crisis import check_for_crisis
 from app.journal import CATEGORIES
+
+REACTION_LABELS = {
+    "helped": "❤️ Helped me",
+    "needed": "🤗 I needed this",
+    "saved": "⭐ Saved",
+}
 
 
 def create_app():
@@ -84,5 +90,70 @@ def create_app():
                 return render_template("crisis_resources.html")
 
         return redirect("/journal")
+
+    @app.route("/wall")
+    def wall():
+        user = get_or_create_user()
+        # only standalone encouragements (not attached to a specific post)
+        encouragements = (
+            Encouragement.query.filter_by(post_id=None)
+            .order_by(Encouragement.created_at.desc())
+            .all()
+        )
+        counts = {}
+        for e in encouragements:
+            counts[e.id] = {
+                key: EncouragementReaction.query.filter_by(
+                    encouragement_id=e.id, reaction_type=key
+                ).count()
+                for key in REACTION_LABELS
+            }
+        return render_template(
+            "wall.html",
+            username=user.username,
+            encouragements=encouragements,
+            counts=counts,
+            reaction_labels=REACTION_LABELS,
+        )
+
+    @app.route("/wall/add", methods=["POST"])
+    def add_wall_encouragement():
+        user = get_or_create_user()
+        body = request.form.get("body", "").strip()
+
+        if body:
+            ok, reason = is_supportive(body)
+            if not ok:
+                flash(reason)
+                return redirect("/wall")
+
+            encouragement = Encouragement(post_id=None, user_id=user.id, body=body)
+            db.session.add(encouragement)
+            db.session.commit()
+
+        return redirect("/wall")
+
+    @app.route("/wall/<int:encouragement_id>/react", methods=["POST"])
+    def react_to_encouragement(encouragement_id):
+        user = get_or_create_user()
+        reaction_type = request.form.get("reaction_type")
+
+        if reaction_type in REACTION_LABELS:
+            already = EncouragementReaction.query.filter_by(
+                encouragement_id=encouragement_id,
+                user_id=user.id,
+                reaction_type=reaction_type,
+            ).first()
+
+            if not already:
+                reaction = EncouragementReaction(
+                    encouragement_id=encouragement_id,
+                    user_id=user.id,
+                    reaction_type=reaction_type,
+                )
+                db.session.add(reaction)
+                db.session.commit()
+
+        return redirect("/wall")
 
     return app

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <p class="identity">posting as {{ username }}</p>
+  <p class="journal-note">leave encouragement for anyone who needs it today.</p>
+
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <div class="flash">{{ messages[0] }}</div>
+    {% endif %}
+  {% endwith %}
+
+  <form method="POST" action="/wall/add" class="post-form">
+    <textarea name="body" placeholder="you're stronger than you think..." required></textarea>
+    <button type="submit">post to the wall</button>
+  </form>
+
+  <div class="feed">
+    {% for e in encouragements %}
+      <div class="post-card">
+        <p class="post-body">{{ e.body }}</p>
+        <div class="reactions">
+          {% for key, label in reaction_labels.items() %}
+            <form method="POST" action="/wall/{{ e.id }}/react" class="reaction-form">
+              <input type="hidden" name="reaction_type" value="{{ key }}">
+              <button type="submit">{{ label }} · {{ counts[e.id][key] }}</button>
+            </form>
+          {% endfor %}
+        </div>
+      </div>
+    {% else %}
+      <p class="placeholder">no encouragement posted yet — be the first.</p>
+    {% endfor %}
+  </div>
+{% endblock %}

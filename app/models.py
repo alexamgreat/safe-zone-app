@@ -35,10 +35,17 @@ class MentorRequest(db.Model):
     
 class Encouragement(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    post_id = db.Column(db.Integer, db.ForeignKey("post.id"), nullable=False)
+    post_id = db.Column(db.Integer, db.ForeignKey("post.id"), nullable=True)  # changed: nullable
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     body = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class EncouragementReaction(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    encouragement_id = db.Column(db.Integer, db.ForeignKey("encouragement.id"), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    reaction_type = db.Column(db.String(20), nullable=False)  # helped, needed, saved
     
 class JournalEntry(db.Model):
     id = db.Column(db.Integer, primary_key=True)
