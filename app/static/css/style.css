@@ -101,3 +101,47 @@
   font-size: 13px;
   cursor: pointer;
 }
+
+.crisis-box {
+  background: white;
+  border: 1px solid #E3E1D9;
+  border-radius: 12px;
+  padding: 24px 20px;
+}
+
+.crisis-box h2 {
+  font-size: 18px;
+  margin: 0 0 10px;
+}
+
+.crisis-box p {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #444441;
+}
+
+.crisis-resource {
+  background: #F1EFE8;
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin: 14px 0;
+}
+
+.crisis-resource-title {
+  font-weight: 600;
+  margin: 0 0 4px;
+  font-size: 14px;
+}
+
+.crisis-note {
+  font-size: 12px;
+  color: #888780;
+}
+
+.crisis-back {
+  display: inline-block;
+  margin-top: 16px;
+  color: #1D9E75;
+  font-size: 14px;
+  text-decoration: none;
+}

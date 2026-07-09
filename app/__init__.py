@@ -3,6 +3,7 @@ from config import Config
 from app.models import db, Post, Encouragement
 from app.auth import get_or_create_user
 from app.moderation import is_supportive
+from app.crisis import check_for_crisis
 
 
 def create_app():
@@ -30,6 +31,9 @@ def create_app():
             new_post = Post(user_id=user.id, topic=topic, body=body)
             db.session.add(new_post)
             db.session.commit()
+
+            if check_for_crisis(body):
+                return render_template("crisis_resources.html")
 
         return redirect("/")
 
