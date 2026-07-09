@@ -5,6 +5,7 @@ from app.auth import get_or_create_user
 from app.moderation import is_supportive
 from app.crisis import check_for_crisis
 from app.journal import CATEGORIES
+from flask_migrate import Migrate
 
 REACTION_LABELS = {
     "helped": "❤️ Helped me",
@@ -18,15 +19,16 @@ def create_app():
     app.config.from_object(Config)
 
     db.init_app(app)
+    Migrate(app, db)
 
-    with app.app_context():
-        db.create_all()
+    # note: db.create_all() is gone — migrations handle table creation now
 
     @app.route("/")
     def home():
         user = get_or_create_user()
         posts = Post.query.order_by(Post.created_at.desc()).all()
         return render_template("feed.html", username=user.username, posts=posts)
+
 
     @app.route("/post", methods=["POST"])
     def create_post():
