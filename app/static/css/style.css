@@ -1,0 +1,103 @@
+.post-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.post-form select,
+.post-form textarea {
+  padding: 10px;
+  border: 1px solid #D3D1C7;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.post-form textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.post-form button {
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  background: #1D9E75;
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.feed {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.post-card {
+  background: white;
+  border: 1px solid #E3E1D9;
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.post-meta {
+  font-size: 12px;
+  color: #888780;
+  margin: 0 0 6px;
+}
+
+.post-body {
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.flash {
+  background: #FAECE7;
+  color: #712B13;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+.encouragements {
+  margin: 10px 0;
+  padding-top: 10px;
+  border-top: 1px solid #E3E1D9;
+}
+
+.encouragement {
+  font-size: 13px;
+  color: #444441;
+  background: #F1EFE8;
+  padding: 8px 10px;
+  border-radius: 8px;
+  margin: 0 0 6px;
+}
+
+.encourage-form {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.encourage-form input {
+  flex: 1;
+  padding: 8px 10px;
+  border: 1px solid #D3D1C7;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.encourage-form button {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 8px;
+  background: #534AB7;
+  color: white;
+  font-size: 13px;
+  cursor: pointer;
+}

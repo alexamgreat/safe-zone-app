@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <p class="identity">posting as {{ username }}</p>
+
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <div class="flash">{{ messages[0] }}</div>
+    {% endif %}
+  {% endwith %}
+
+  <form method="POST" action="/post" class="post-form">
+    <select name="topic" required>
+      <option value="school">school</option>
+      <option value="family">family</option>
+      <option value="friendships">friendships</option>
+      <option value="anxiety">anxiety</option>
+      <option value="other">other</option>
+    </select>
+    <textarea name="body" placeholder="what's on your mind?" required></textarea>
+    <button type="submit">share anonymously</button>
+  </form>
+
+  <div class="feed">
+    {% for post in posts %}
+      <div class="post-card">
+        <p class="post-meta">posted anonymously · {{ post.topic }}</p>
+        <p class="post-body">{{ post.body }}</p>
+
+        {% if post.encouragements %}
+          <div class="encouragements">
+            {% for e in post.encouragements %}
+              <p class="encouragement">{{ e.body }}</p>
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        <form method="POST" action="/post/{{ post.id }}/encourage" class="encourage-form">
+          <input type="text" name="body" placeholder="leave some encouragement..." required>
+          <button type="submit">send</button>
+        </form>
+      </div>
+    {% else %}
+      <p class="placeholder">no posts yet — be the first to share.</p>
+    {% endfor %}
+  </div>
+{% endblock %}
