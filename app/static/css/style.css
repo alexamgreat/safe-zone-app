@@ -357,3 +357,36 @@ input:focus {
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
 }
+
+.mood-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+  gap: 8px;
+}
+
+.mood-option {
+  position: relative;
+}
+
+.mood-option input {
+  position: absolute;
+  opacity: 0;
+}
+
+.mood-option span {
+  display: block;
+  text-align: center;
+  padding: 12px 8px;
+  border: 1px solid var(--mist);
+  border-radius: 12px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.mood-option input:checked + span {
+  border-color: var(--sage);
+  background: var(--surface-soft);
+  color: var(--sage-deep);
+  font-weight: 600;
+}

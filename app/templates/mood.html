@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <p class="identity">posting as {{ username }}</p>
+  <p class="journal-note">how are you feeling today?</p>
+
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <div class="flash">{{ messages[0] }}</div>
+    {% endif %}
+  {% endwith %}
+
+  <form method="POST" action="/mood/add" class="post-form">
+    <div class="mood-grid">
+      {% for key, label in moods.items() %}
+        <label class="mood-option">
+          <input type="radio" name="mood" value="{{ key }}" required>
+          <span>{{ label }}</span>
+        </label>
+      {% endfor %}
+    </div>
+    <textarea name="note" placeholder="what happened today? (optional)"></textarea>
+    <button type="submit">check in</button>
+  </form>
+
+  <p class="journal-note">your recent check-ins</p>
+  <div class="feed">
+    {% for entry in history %}
+      <div class="post-card">
+        <p class="post-meta">{{ moods[entry.mood] }} · {{ entry.created_at.strftime('%b %d') }}</p>
+        {% if entry.note %}
+          <p class="post-body">{{ entry.note }}</p>
+        {% endif %}
+      </div>
+    {% else %}
+      <p class="placeholder">no check-ins yet — tap a mood above to start.</p>
+    {% endfor %}
+  </div>
+{% endblock %}

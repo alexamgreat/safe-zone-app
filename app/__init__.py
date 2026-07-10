@@ -1,11 +1,12 @@
 from flask import Flask, render_template, request, redirect, flash
+from flask_migrate import Migrate
 from config import Config
-from app.models import db, Post, Encouragement, EncouragementReaction, JournalEntry
+from app.models import db, Post, Encouragement, EncouragementReaction, JournalEntry, MoodCheckIn
 from app.auth import get_or_create_user
 from app.moderation import is_supportive
 from app.crisis import check_for_crisis
 from app.journal import CATEGORIES
-from flask_migrate import Migrate
+from app.mood import MOODS, HEAVY_MOODS
 
 REACTION_LABELS = {
     "helped": "❤️ Helped me",
@@ -13,22 +14,21 @@ REACTION_LABELS = {
     "saved": "⭐ Saved",
 }
 
+migrate = Migrate()
+
 
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
 
     db.init_app(app)
-    Migrate(app, db)
-
-    # note: db.create_all() is gone — migrations handle table creation now
+    migrate.init_app(app, db)
 
     @app.route("/")
     def home():
         user = get_or_create_user()
         posts = Post.query.order_by(Post.created_at.desc()).all()
         return render_template("feed.html", username=user.username, posts=posts)
-
 
     @app.route("/post", methods=["POST"])
     def create_post():
@@ -96,7 +96,6 @@ def create_app():
     @app.route("/wall")
     def wall():
         user = get_or_create_user()
-        # only standalone encouragements (not attached to a specific post)
         encouragements = (
             Encouragement.query.filter_by(post_id=None)
             .order_by(Encouragement.created_at.desc())
@@ -157,5 +156,39 @@ def create_app():
                 db.session.commit()
 
         return redirect("/wall")
+
+    @app.route("/mood")
+    def mood():
+        user = get_or_create_user()
+        history = (
+            MoodCheckIn.query.filter_by(user_id=user.id)
+            .order_by(MoodCheckIn.created_at.desc())
+            .limit(14)
+            .all()
+        )
+        return render_template(
+            "mood.html", username=user.username, moods=MOODS, history=history
+        )
+
+    @app.route("/mood/add", methods=["POST"])
+    def add_mood():
+        user = get_or_create_user()
+        mood_key = request.form.get("mood")
+        note = request.form.get("note", "").strip()
+
+        if mood_key not in MOODS:
+            return redirect("/mood")
+
+        entry = MoodCheckIn(user_id=user.id, mood=mood_key, note=note or None)
+        db.session.add(entry)
+        db.session.commit()
+
+        if note and check_for_crisis(note):
+            return render_template("crisis_resources.html")
+
+        if mood_key in HEAVY_MOODS and not note:
+            flash("want to talk about what happened today? you can add a note anytime, or share on the feed.")
+
+        return redirect("/mood")
 
     return app

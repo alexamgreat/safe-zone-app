@@ -52,4 +52,11 @@ class JournalEntry(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     category = db.Column(db.String(20), nullable=False)  # good_thing, smile, proud, win
     body = db.Column(db.Text, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)   
+    created_at = db.Column(db.DateTime, default=datetime.utcnow) 
+
+class MoodCheckIn(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    mood = db.Column(db.String(20), nullable=False)  # happy, okay, sad, angry, anxious, tired, overwhelmed
+    note = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)    
