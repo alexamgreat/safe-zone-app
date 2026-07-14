@@ -8,19 +8,25 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-  <header class="header">
-    <span class="logo">safe zone</span>
-    <nav class="nav">
-      <a href="/">feed</a>
-      <a href="/mood">mood</a>
-      <a href="/journal">journal</a>
-      <a href="/wall">wall</a>
-    </nav>
-  </header>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <span class="logo">🌿 safe zone</span>
+        <p class="sidebar-tagline">you're not alone 🤍</p>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="/" class="{{ 'active' if request.path == '/' else '' }}">🏠 Home</a>
+        <a href="/feed" class="{{ 'active' if request.path == '/feed' else '' }}">👥 Community</a>
+        <a href="/journal" class="{{ 'active' if request.path == '/journal' else '' }}">📓 Journal</a>
+        <a href="/mood" class="{{ 'active' if request.path == '/mood' else '' }}">🌱 Garden</a>
+        <a href="/wall" class="{{ 'active' if request.path == '/wall' else '' }}">⭐ Wall</a>
+        <a href="/support" class="{{ 'active' if request.path == '/support' else '' }}">🛟 Support</a>
+      </nav>
+    </aside>
 
-  <main class="content">
-    {% block content %}{% endblock %}
-  </main>
-
+    <main class="content">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
 </body>
 </html>

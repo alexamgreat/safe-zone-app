@@ -1,3 +1,4 @@
+from datetime import datetime
 from flask import Flask, render_template, request, redirect, flash
 from flask_migrate import Migrate
 from config import Config
@@ -6,7 +7,9 @@ from app.auth import get_or_create_user
 from app.moderation import is_supportive
 from app.crisis import check_for_crisis
 from app.journal import CATEGORIES
-from app.mood import MOODS, HEAVY_MOODS
+from app.mood import MOODS, HEAVY_MOODS, calculate_streak
+from app.quotes import quote_of_the_day
+from app.presets import ENCOURAGEMENT_PRESETS
 
 REACTION_LABELS = {
     "helped": "❤️ Helped me",
@@ -25,7 +28,37 @@ def create_app():
     migrate.init_app(app, db)
 
     @app.route("/")
-    def home():
+    def dashboard():
+        user = get_or_create_user()
+        streak = calculate_streak(user.id)
+        quote = quote_of_the_day()
+        recent_posts = Post.query.order_by(Post.created_at.desc()).limit(2).all()
+        wall_preview = (
+            Encouragement.query.filter_by(post_id=None)
+            .order_by(Encouragement.created_at.desc())
+            .first()
+        )
+        stats = {
+            "stories": Post.query.count(),
+            "encouragements": Encouragement.query.count(),
+            "people_helped": EncouragementReaction.query.count(),
+        }
+        today = datetime.utcnow().strftime("%A, %B %d, %Y")
+
+        return render_template(
+            "home.html",
+            username=user.username,
+            moods=MOODS,
+            streak=streak,
+            quote=quote,
+            recent_posts=recent_posts,
+            wall_preview=wall_preview,
+            stats=stats,
+            today=today,
+        )
+
+    @app.route("/feed")
+    def feed():
         user = get_or_create_user()
         posts = Post.query.order_by(Post.created_at.desc()).all()
         return render_template("feed.html", username=user.username, posts=posts)
@@ -44,7 +77,7 @@ def create_app():
             if check_for_crisis(body):
                 return render_template("crisis_resources.html")
 
-        return redirect("/")
+        return redirect("/feed")
 
     @app.route("/post/<int:post_id>/encourage", methods=["POST"])
     def add_encouragement(post_id):
@@ -53,17 +86,17 @@ def create_app():
         post = Post.query.get_or_404(post_id)
 
         if not body:
-            return redirect("/")
+            return redirect("/feed")
 
         ok, reason = is_supportive(body)
         if not ok:
             flash(reason)
-            return redirect("/")
+            return redirect("/feed")
 
         encouragement = Encouragement(post_id=post.id, user_id=user.id, body=body)
         db.session.add(encouragement)
         db.session.commit()
-        return redirect("/")
+        return redirect("/feed")
 
     @app.route("/journal")
     def journal():
@@ -175,9 +208,10 @@ def create_app():
         user = get_or_create_user()
         mood_key = request.form.get("mood")
         note = request.form.get("note", "").strip()
+        next_url = request.form.get("next", "/mood")
 
         if mood_key not in MOODS:
-            return redirect("/mood")
+            return redirect(next_url)
 
         entry = MoodCheckIn(user_id=user.id, mood=mood_key, note=note or None)
         db.session.add(entry)
@@ -189,6 +223,22 @@ def create_app():
         if mood_key in HEAVY_MOODS and not note:
             flash("want to talk about what happened today? you can add a note anytime, or share on the feed.")
 
-        return redirect("/mood")
+        return redirect(next_url)
+
+    @app.route("/support")
+    def support():
+        user = get_or_create_user()
+        return render_template("crisis_resources.html", username=user.username)
+    
+    @app.route("/encourage/random")
+    def encourage_random():
+        user = get_or_create_user()
+        post = Post.query.order_by(db.func.random()).first()
+        return render_template(
+            "encourage.html",
+            username=user.username,
+            post=post,
+            presets=ENCOURAGEMENT_PRESETS,
+        )
 
     return app

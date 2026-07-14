@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <p class="identity">posting as {{ username }}</p>
+  <p class="journal-note">someone shared this — brighten their day.</p>
+
+  {% if post %}
+    <div class="post-card">
+      <p class="post-meta">posted anonymously · {{ post.topic }}</p>
+      <p class="post-body">{{ post.body }}</p>
+    </div>
+
+    <div class="quick-presets">
+      {% for preset in presets %}
+        <form method="POST" action="/post/{{ post.id }}/encourage" class="preset-form">
+          <input type="hidden" name="body" value="{{ preset }}">
+          <button type="submit">{{ preset }}</button>
+        </form>
+      {% endfor %}
+    </div>
+
+    <form method="POST" action="/post/{{ post.id }}/encourage" class="encourage-form">
+      <input type="text" name="body" placeholder="or write your own..." required>
+      <button type="submit">send</button>
+    </form>
+
+    <a href="/encourage/random" class="card-link">show me another →</a>
+  {% else %}
+    <p class="placeholder">no stories to encourage yet — check back soon.</p>
+  {% endif %}
+{% endblock %}

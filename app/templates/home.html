@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <div class="dash-header">
+    <div>
+      <h1>Good day, {{ username }}! 🌿</h1>
+      <p class="journal-note">we're glad you're here.</p>
+    </div>
+    <span class="dash-date">{{ today }}</span>
+  </div>
+
+  <div class="dashboard-grid">
+
+    <div class="card">
+      <h2 class="card-title">How are you feeling today?</h2>
+      <p class="journal-note">your feelings matter — take a moment.</p>
+      <form method="POST" action="/mood/add" class="mood-quick">
+        <input type="hidden" name="next" value="/">
+        {% for key, label in moods.items() %}
+          <button type="submit" name="mood" value="{{ key }}" class="mood-quick-btn">{{ label }}</button>
+        {% endfor %}
+      </form>
+      <a href="/mood" class="card-link">check in fully →</a>
+    </div>
+
+    <div class="card card-quote">
+      <h2 class="card-title">Quote of the Day</h2>
+      <p class="quote-text">“{{ quote }}”</p>
+    </div>
+
+    <div class="card">
+      <h2 class="card-title">🌱 Your Garden</h2>
+      <p class="journal-note">keep growing, one day at a time.</p>
+      <div class="streak-box">
+        <span class="streak-number">{{ streak }}</span>
+        <span>day streak {% if streak > 0 %}— you're doing amazing!{% endif %}</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="card-title">💛 Our Community Today</h2>
+      <div class="stats-row">
+        <div class="stat-box">
+          <span class="stat-number">{{ stats.stories }}</span>
+          <span class="stat-label">stories shared</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-number">{{ stats.encouragements }}</span>
+          <span class="stat-label">encouragements</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-number">{{ stats.people_helped }}</span>
+          <span class="stat-label">people helped</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header-row">
+        <h2 class="card-title">Recent from the Community</h2>
+        <a href="/feed" class="card-link">view all →</a>
+      </div>
+      {% for post in recent_posts %}
+        <div class="mini-post">
+          <p class="post-meta">{{ post.topic }}</p>
+          <p class="post-body">{{ post.body }}</p>
+        </div>
+      {% else %}
+        <p class="placeholder">no stories shared yet.</p>
+      {% endfor %}
+    </div>
+
+    <div class="card card-wall">
+      <div class="card-header-row">
+        <h2 class="card-title">⭐ Encouragement Wall</h2>
+        <a href="/wall" class="card-link">view all →</a>
+      </div>
+      {% if wall_preview %}
+        <p class="quote-text">“{{ wall_preview.body }}”</p>
+      {% else %}
+        <p class="placeholder">no encouragement posted yet.</p>
+      {% endif %}
+    </div>
+
+    <div class="card card-actions">
+      <h2 class="card-title">⚡ Quick Actions</h2>
+      <a href="/feed" class="quick-action">💬 Share Anonymously<span>share what's on your mind</span></a>
+      <a href="/journal" class="quick-action">📓 Write in Journal<span>private space for you</span></a>
+      <a href="/encourage/random" class="quick-action">💚 Encourage Someone<span>brighten someone's day</span></a>
+      <a href="/support" class="quick-action">🛟 Support<span>if you need someone right now</span></a>
+    </div>
+
+  </div>
+{% endblock %}
