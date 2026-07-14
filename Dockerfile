@@ -9,4 +9,6 @@ COPY . .
 
 EXPOSE 10000
 
-CMD ["gunicorn", "run:app", "--bind", "0.0.0.0:10000"]
+COPY start.sh .
+RUN chmod +x /start.sh
+CMD ["/start.sh"]
