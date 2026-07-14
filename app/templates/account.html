@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <p class="identity">posting as {{ user.username }}</p>
+  <p class="journal-note">your username and history stay exactly the same — this page never shows your identity to anyone else.</p>
+
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <div class="flash">{{ messages[0] }}</div>
+    {% endif %}
+  {% endwith %}
+
+  <div class="card">
+    <h2 class="card-title">Choose an avatar</h2>
+    <p class="journal-note">a preset icon only — never a real photo.</p>
+    <form method="POST" action="/account/avatar" class="avatar-grid">
+      {% for a in avatars %}
+        <button type="submit" name="avatar" value="{{ a }}" class="avatar-option {{ 'selected' if user.avatar == a else '' }}">{{ a }}</button>
+      {% endfor %}
+    </form>
+  </div>
+
+  {% if user.email %}
+    <div class="card">
+      <h2 class="card-title">Account linked</h2>
+      <p class="journal-note">you can log back in as {{ user.username }} from any device using this email.</p>
+      <form method="POST" action="/account/logout">
+        <button type="submit" class="post-form button">log out</button>
+      </form>
+    </div>
+  {% else %}
+    <div class="card">
+      <h2 class="card-title">Save this identity (optional)</h2>
+      <p class="journal-note">link an email so you can return as {{ user.username }} from another device. no one else will ever see this email.</p>
+      <form method="POST" action="/account/signup" class="post-form">
+        <input type="email" name="email" placeholder="email" required>
+        <input type="password" name="password" placeholder="password" required>
+        <button type="submit">save this identity</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2 class="card-title">Already have an identity?</h2>
+      <form method="POST" action="/account/login" class="post-form">
+        <input type="email" name="email" placeholder="email" required>
+        <input type="password" name="password" placeholder="password" required>
+        <button type="submit">log in</button>
+      </form>
+    </div>
+  {% endif %}
+{% endblock %}

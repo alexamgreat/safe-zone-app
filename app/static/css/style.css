@@ -634,3 +634,27 @@ input:focus {
   background: var(--surface-soft);
   color: var(--sage-deep);
 }
+.avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+}
+
+.avatar-option {
+  font-size: 22px;
+  padding: 10px;
+  border: 1px solid var(--mist);
+  border-radius: 12px;
+  background: var(--bg);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.avatar-option:hover {
+  border-color: var(--sage);
+}
+
+.avatar-option.selected {
+  border-color: var(--sage);
+  background: var(--surface-soft);
+}

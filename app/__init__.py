@@ -1,5 +1,5 @@
 from datetime import datetime
-from flask import Flask, render_template, request, redirect, flash
+from flask import Flask, render_template, request, redirect, flash, session
 from flask_migrate import Migrate
 from config import Config
 from app.models import db, Post, Encouragement, EncouragementReaction, JournalEntry, MoodCheckIn
@@ -10,6 +10,9 @@ from app.journal import CATEGORIES
 from app.mood import MOODS, HEAVY_MOODS, calculate_streak
 from app.quotes import quote_of_the_day
 from app.presets import ENCOURAGEMENT_PRESETS
+from app.avatars import AVATARS
+from app.auth import get_or_create_user, create_account, login_with_email
+from flask import Flask, render_template, request, redirect, flash, session
 
 REACTION_LABELS = {
     "helped": "❤️ Helped me",
@@ -240,5 +243,52 @@ def create_app():
             post=post,
             presets=ENCOURAGEMENT_PRESETS,
         )
+    @app.route("/account")
+    def account():
+        user = get_or_create_user()
+        return render_template("account.html", user=user, avatars=AVATARS)
+
+    @app.route("/account/avatar", methods=["POST"])
+    def set_avatar():
+        user = get_or_create_user()
+        avatar = request.form.get("avatar")
+        if avatar in AVATARS:
+            user.avatar = avatar
+            db.session.commit()
+        return redirect("/account")
+
+    @app.route("/account/signup", methods=["POST"])
+    def signup():
+        user = get_or_create_user()
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "")
+
+        if not email or not password:
+            flash("please fill in both fields.")
+            return redirect("/account")
+
+        ok, error = create_account(user, email, password)
+        if not ok:
+            flash(error)
+        else:
+            flash("account linked — you can now log back in as " + user.username + " from any device.")
+        return redirect("/account")
+
+    @app.route("/account/login", methods=["POST"])
+    def login():
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "")
+
+        user, error = login_with_email(email, password)
+        if error:
+            flash(error)
+        return redirect("/account")
+
+    @app.route("/account/logout", methods=["POST"])
+    def logout():
+        session.pop("user_id", None)
+        return redirect("/account")    
+        
+    
 
     return app
