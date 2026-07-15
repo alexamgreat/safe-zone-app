@@ -3,7 +3,7 @@ from flask import Flask, render_template, request, redirect, flash, session
 from flask_migrate import Migrate
 from config import Config
 from app.models import db, Post, Encouragement, EncouragementReaction, JournalEntry, MoodCheckIn
-from app.auth import get_or_create_user
+from app.auth import get_current_user, signup, login, logout
 from app.moderation import is_supportive
 from app.crisis import check_for_crisis
 from app.journal import CATEGORIES
@@ -11,8 +11,6 @@ from app.mood import MOODS, HEAVY_MOODS, calculate_streak
 from app.quotes import quote_of_the_day
 from app.presets import ENCOURAGEMENT_PRESETS
 from app.avatars import AVATARS
-from app.auth import get_or_create_user, create_account, login_with_email
-from flask import Flask, render_template, request, redirect, flash, session
 
 REACTION_LABELS = {
     "helped": "❤️ Helped me",
@@ -30,9 +28,18 @@ def create_app():
     db.init_app(app)
     migrate.init_app(app, db)
 
+    PUBLIC_ENDPOINTS = {"welcome", "do_signup", "do_login", "static"}
+
+    @app.before_request
+    def require_login():
+        if request.endpoint in PUBLIC_ENDPOINTS or request.endpoint is None:
+            return
+        if not get_current_user():
+            return redirect("/welcome")
+
     @app.route("/")
     def dashboard():
-        user = get_or_create_user()
+        user = get_current_user()
         streak = calculate_streak(user.id)
         quote = quote_of_the_day()
         recent_posts = Post.query.order_by(Post.created_at.desc()).limit(2).all()
@@ -62,13 +69,13 @@ def create_app():
 
     @app.route("/feed")
     def feed():
-        user = get_or_create_user()
+        user = get_current_user()
         posts = Post.query.order_by(Post.created_at.desc()).all()
         return render_template("feed.html", username=user.username, posts=posts)
 
     @app.route("/post", methods=["POST"])
     def create_post():
-        user = get_or_create_user()
+        user = get_current_user()
         topic = request.form.get("topic")
         body = request.form.get("body", "").strip()
 
@@ -84,7 +91,7 @@ def create_app():
 
     @app.route("/post/<int:post_id>/encourage", methods=["POST"])
     def add_encouragement(post_id):
-        user = get_or_create_user()
+        user = get_current_user()
         body = request.form.get("body", "").strip()
         post = Post.query.get_or_404(post_id)
 
@@ -103,7 +110,7 @@ def create_app():
 
     @app.route("/journal")
     def journal():
-        user = get_or_create_user()
+        user = get_current_user()
         entries = (
             JournalEntry.query.filter_by(user_id=user.id)
             .order_by(JournalEntry.created_at.desc())
@@ -115,7 +122,7 @@ def create_app():
 
     @app.route("/journal/add", methods=["POST"])
     def add_journal_entry():
-        user = get_or_create_user()
+        user = get_current_user()
         category = request.form.get("category")
         body = request.form.get("body", "").strip()
 
@@ -131,7 +138,7 @@ def create_app():
 
     @app.route("/wall")
     def wall():
-        user = get_or_create_user()
+        user = get_current_user()
         encouragements = (
             Encouragement.query.filter_by(post_id=None)
             .order_by(Encouragement.created_at.desc())
@@ -155,7 +162,7 @@ def create_app():
 
     @app.route("/wall/add", methods=["POST"])
     def add_wall_encouragement():
-        user = get_or_create_user()
+        user = get_current_user()
         body = request.form.get("body", "").strip()
 
         if body:
@@ -172,7 +179,7 @@ def create_app():
 
     @app.route("/wall/<int:encouragement_id>/react", methods=["POST"])
     def react_to_encouragement(encouragement_id):
-        user = get_or_create_user()
+        user = get_current_user()
         reaction_type = request.form.get("reaction_type")
 
         if reaction_type in REACTION_LABELS:
@@ -195,7 +202,7 @@ def create_app():
 
     @app.route("/mood")
     def mood():
-        user = get_or_create_user()
+        user = get_current_user()
         history = (
             MoodCheckIn.query.filter_by(user_id=user.id)
             .order_by(MoodCheckIn.created_at.desc())
@@ -208,7 +215,7 @@ def create_app():
 
     @app.route("/mood/add", methods=["POST"])
     def add_mood():
-        user = get_or_create_user()
+        user = get_current_user()
         mood_key = request.form.get("mood")
         note = request.form.get("note", "").strip()
         next_url = request.form.get("next", "/mood")
@@ -230,12 +237,12 @@ def create_app():
 
     @app.route("/support")
     def support():
-        user = get_or_create_user()
+        user = get_current_user()
         return render_template("crisis_resources.html", username=user.username)
-    
+
     @app.route("/encourage/random")
     def encourage_random():
-        user = get_or_create_user()
+        user = get_current_user()
         post = Post.query.order_by(db.func.random()).first()
         return render_template(
             "encourage.html",
@@ -243,52 +250,60 @@ def create_app():
             post=post,
             presets=ENCOURAGEMENT_PRESETS,
         )
+
     @app.route("/account")
     def account():
-        user = get_or_create_user()
+        user = get_current_user()
         return render_template("account.html", user=user, avatars=AVATARS)
 
     @app.route("/account/avatar", methods=["POST"])
     def set_avatar():
-        user = get_or_create_user()
+        user = get_current_user()
         avatar = request.form.get("avatar")
         if avatar in AVATARS:
             user.avatar = avatar
             db.session.commit()
         return redirect("/account")
 
-    @app.route("/account/signup", methods=["POST"])
-    def signup():
-        user = get_or_create_user()
-        email = request.form.get("email", "").strip().lower()
+    @app.route("/welcome")
+    def welcome():
+        if get_current_user():
+            return redirect("/")
+        return render_template("welcome.html")
+
+    @app.route("/welcome/signup", methods=["POST"])
+    def do_signup():
+        email = request.form.get("email", "")
         password = request.form.get("password", "")
 
         if not email or not password:
             flash("please fill in both fields.")
-            return redirect("/account")
+            return redirect("/welcome")
 
-        ok, error = create_account(user, email, password)
-        if not ok:
-            flash(error)
-        else:
-            flash("account linked — you can now log back in as " + user.username + " from any device.")
-        return redirect("/account")
-
-    @app.route("/account/login", methods=["POST"])
-    def login():
-        email = request.form.get("email", "").strip().lower()
-        password = request.form.get("password", "")
-
-        user, error = login_with_email(email, password)
+        user, error = signup(email, password)
         if error:
             flash(error)
-        return redirect("/account")
+            return redirect("/welcome")
+
+        return redirect("/")
+
+    @app.route("/welcome/login", methods=["POST"])
+    def do_login():
+        email = request.form.get("email", "")
+        password = request.form.get("password", "")
+
+        user, error = login(email, password)
+        if error:
+            flash(error)
+            return redirect("/welcome")
+
+        return redirect("/")
 
     @app.route("/account/logout", methods=["POST"])
-    def logout():
-        session.pop("user_id", None)
-        return redirect("/account")    
-        
-    
+    def account_logout():
+        logout()
+        return redirect("/welcome")
 
     return app
+        
+        

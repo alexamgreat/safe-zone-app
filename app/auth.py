@@ -11,41 +11,43 @@ def generate_username():
     return f"{random.choice(ADJECTIVES)}_{random.choice(NOUNS)}"
 
 
-def get_or_create_user():
+def get_current_user():
+    """Returns the logged-in user, or None if nobody is logged in.
+    Unlike before, this NEVER creates a new user automatically."""
     user_id = session.get("user_id")
+    if not user_id:
+        return None
+    return User.query.get(user_id)
 
-    if user_id:
-        user = User.query.get(user_id)
-        if user:
-            return user
+
+def signup(email, password):
+    """Creates a brand new anonymous identity AND attaches login
+    credentials in one step, since accounts are now required upfront."""
+    email = email.strip().lower()
+
+    if User.query.filter_by(email=email).first():
+        return None, "that email is already registered."
 
     username = generate_username()
     while User.query.filter_by(username=username).first():
         username = generate_username()
 
-    user = User(username=username)
+    user = User(
+        username=username,
+        email=email,
+        password_hash=generate_password_hash(password),
+    )
     db.session.add(user)
     db.session.commit()
 
     session["user_id"] = user.id
-    return user
+    return user, None
 
 
-def create_account(user, email, password):
-    """Attaches login credentials to the CURRENT anonymous identity.
-    Username and history stay exactly the same — this only adds a way
-    to get back to this same identity from another device."""
-    if User.query.filter_by(email=email).first():
-        return False, "that email is already linked to an account."
-
-    user.email = email
-    user.password_hash = generate_password_hash(password)
-    db.session.commit()
-    return True, None
-
-
-def login_with_email(email, password):
+def login(email, password):
+    email = email.strip().lower()
     user = User.query.filter_by(email=email).first()
+
     if not user or not user.password_hash:
         return None, "no account found with that email."
     if not check_password_hash(user.password_hash, password):
@@ -53,3 +55,7 @@ def login_with_email(email, password):
 
     session["user_id"] = user.id
     return user, None
+
+
+def logout():
+    session.pop("user_id", None)

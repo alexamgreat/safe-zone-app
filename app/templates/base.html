@@ -9,6 +9,7 @@
 </head>
 <body>
   <div class="app-shell">
+    {% if request.endpoint != 'welcome' %}
     <aside class="sidebar">
       <div class="sidebar-logo">
         <span class="logo">🌿 safe zone</span>
@@ -23,7 +24,8 @@
         <a href="/support" class="{{ 'active' if request.path == '/support' else '' }}">🛟 Support</a>
         <a href="/account" class="{{ 'active' if request.path == '/account' else '' }}">{{ '👤 Account' }}</a>
       </nav>
-    </aside>
+   </aside>
+    {% endif %}
 
     <main class="content">
       {% block content %}{% endblock %}

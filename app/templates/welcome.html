@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <div class="card" style="max-width:400px; margin:40px auto;">
+    <h1 class="logo" style="margin-bottom:4px;">🌿 safe zone</h1>
+    <p class="journal-note">you're not alone 🤍</p>
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="flash">{{ messages[0] }}</div>
+      {% endif %}
+    {% endwith %}
+
+    <h2 class="card-title" style="margin-top:20px;">Create your identity</h2>
+    <p class="journal-note">no names, no photos — just an email so you can return.</p>
+    <form method="POST" action="/welcome/signup" class="post-form">
+      <input type="email" name="email" placeholder="email" required>
+      <input type="password" name="password" placeholder="password" required>
+      <button type="submit">create my safe zone</button>
+    </form>
+
+    <h2 class="card-title" style="margin-top:24px;">Already have an identity?</h2>
+    <form method="POST" action="/welcome/login" class="post-form">
+      <input type="email" name="email" placeholder="email" required>
+      <input type="password" name="password" placeholder="password" required>
+      <button type="submit">log in</button>
+    </form>
+  </div>
+{% endblock %}
