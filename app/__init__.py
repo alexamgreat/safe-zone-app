@@ -42,7 +42,7 @@ def create_app():
         user = get_current_user()
         streak = calculate_streak(user.id)
         quote = quote_of_the_day()
-        recent_posts = Post.query.order_by(Post.created_at.desc()).limit(2).all()
+        recent_posts = Post.query.order_by(Post.created_at.desc()).all()
         wall_preview = (
             Encouragement.query.filter_by(post_id=None)
             .order_by(Encouragement.created_at.desc())
