@@ -27,6 +27,14 @@
    </aside>
     {% endif %}
 
+    <nav class="mobile-nav">
+      <a href="/" class="{{ 'active' if request.path == '/' else '' }}">🏠<span>Home</span></a>
+      <a href="/feed" class="{{ 'active' if request.path == '/feed' else '' }}">👥<span>Community</span></a>
+      <a href="/journal" class="{{ 'active' if request.path == '/journal' else '' }}">📓<span>Journal</span></a>
+      <a href="/mood" class="{{ 'active' if request.path == '/mood' else '' }}">🌱<span>Garden</span></a>
+      <a href="/account" class="{{ 'active' if request.path == '/account' else '' }}">👤<span>You</span></a>
+    </nav>
+
     <main class="content">
       {% block content %}{% endblock %}
     </main>
