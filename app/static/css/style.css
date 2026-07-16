@@ -16,6 +16,10 @@
 * {
   box-sizing: border-box;
 }
+html, body {
+  overflow-x: hidden;
+  max-width: 100%;
+}
 
 body {
   margin: 0;
@@ -648,6 +652,26 @@ input:focus {
   .quick-action-row { grid-template-columns: 1fr; }
   .hero h1 { font-size: 24px; }
   .content { padding: 16px 16px 80px; }
+  .stats-row {
+    flex-wrap: wrap;
+  }
+
+  .stat-box {
+    min-width: 90px;
+  }
+
+  .mood-quick {
+    flex-wrap: wrap;
+  }
+
+  .mood-quick-btn {
+    flex: 1 1 auto;
+    min-width: 60px;
+  }
+
+  .hero-card, .card {
+    padding: 18px;
+  }
 }
 .quick-presets {
   display: flex;
