@@ -11,17 +11,20 @@
 
   <div class="dashboard-grid">
 
-    <div class="card">
-      <h2 class="card-title">How are you feeling today?</h2>
-      <p class="journal-note">your feelings matter — take a moment.</p>
-      <form method="POST" action="/mood/add" class="mood-quick">
-        <input type="hidden" name="next" value="/">
-        {% for key, label in moods.items() %}
-          <button type="submit" name="mood" value="{{ key }}" class="mood-quick-btn">{{ label }}</button>
-        {% endfor %}
-      </form>
-      <a href="/mood" class="card-link">check in fully →</a>
-    </div>
+   <details class="hero-card mood-collapse" open>
+    <summary class="mood-summary">
+      <span class="card-title" style="margin:0;">How are you feeling today?</span>
+      <span class="mood-chevron">›</span>
+    </summary>
+    <p class="journal-note">your feelings matter — take a moment.</p>
+    <form method="POST" action="/mood/add" class="mood-quick">
+      <input type="hidden" name="next" value="/">
+      {% for key, label in moods.items() %}
+        <button type="submit" name="mood" value="{{ key }}" class="mood-quick-btn">{{ label }}</button>
+      {% endfor %}
+    </form>
+    <a href="/mood" class="card-link">check in fully →</a>
+  </details>
 
     <div class="card card-quote">
       <h2 class="card-title">Quote of the Day</h2>

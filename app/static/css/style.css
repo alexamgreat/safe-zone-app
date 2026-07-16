@@ -720,3 +720,123 @@ input:focus {
   border-color: var(--sage);
   background: var(--surface-soft);
 }
+.mood-collapse summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+.mood-collapse summary::-webkit-details-marker {
+  display: none;
+}
+
+.mood-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.mood-chevron {
+  font-size: 20px;
+  color: var(--sage);
+  transition: transform 0.2s ease;
+}
+
+.mood-collapse[open] .mood-chevron {
+  transform: rotate(90deg);
+}
+
+/* make sure nothing clips card content anywhere */
+.card, .hero-card, .dashboard-loose-grid {
+  overflow: visible;
+  height: auto;
+}
+
+@media (max-width: 800px) {
+  .mood-collapse:not([open]) .mood-quick,
+  .mood-collapse:not([open]) .journal-note,
+  .mood-collapse:not([open]) .card-link {
+    display: none;
+  }
+
+  .dashboard-loose-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.hero {
+  padding: 12px 4px 24px;
+}
+
+.hero-eyebrow {
+  font-size: 12px;
+  color: var(--ink-soft);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin: 0 0 8px;
+}
+
+.hero h1 {
+  font-size: 30px;
+  margin: 0 0 8px;
+  color: var(--sage-deep);
+}
+
+.hero-sub {
+  font-size: 15px;
+  color: var(--ink-soft);
+  margin: 0;
+}
+
+.hero-card {
+  background: var(--surface);
+  border-radius: 24px;
+  padding: 28px;
+  box-shadow: 0 4px 20px rgba(38,48,37,0.07);
+  margin-bottom: 20px;
+}
+
+.dashboard-loose-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.card-quote {
+  background: linear-gradient(160deg, var(--surface-soft), var(--surface));
+}
+
+.card-actions {
+  background: linear-gradient(160deg, var(--surface), var(--surface-soft));
+}
+
+.quick-action-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.quick-action {
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  background: var(--surface);
+  border: 1px solid var(--mist);
+  border-radius: 14px;
+  padding: 14px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  transition: all 0.15s ease;
+}
+
+.quick-action:hover {
+  border-color: var(--sage);
+  transform: translateY(-1px);
+}
+
+.quick-action span {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--ink-soft);
+  margin-top: 2px;
+}
