@@ -71,4 +71,10 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=True)
     password_hash = db.Column(db.String(200), nullable=True)
     avatar = db.Column(db.String(10), default="🌿")
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)     
+    created_at = db.Column(db.DateTime, default=datetime.utcnow) 
+class CompanionMessage(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    sender = db.Column(db.String(10), nullable=False)
+    body = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)   

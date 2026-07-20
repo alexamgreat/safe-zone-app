@@ -11,7 +11,8 @@ from app.quotes import quote_of_the_day
 from app.presets import ENCOURAGEMENT_PRESETS
 from app.avatars import AVATARS
 from app.moderation import is_supportive, is_valid_nickname
-from app.models import db, Post, Encouragement, EncouragementReaction, JournalEntry, MoodCheckIn, User
+from app.models import db, Post, Encouragement, EncouragementReaction, JournalEntry, MoodCheckIn, User, CompanionMessage
+from app.companion import generate_reply, greeting
 
 REACTION_LABELS = {
     "helped": "❤️ Helped me",
@@ -324,7 +325,39 @@ def create_app():
         db.session.commit()
         flash("nickname updated!")
         return redirect("/account")
+    @app.route("/companion")
+    def companion():
+        user = get_current_user()
+        history = (
+            CompanionMessage.query.filter_by(user_id=user.id)
+            .order_by(CompanionMessage.created_at.asc())
+            .all()
+        )
+        return render_template(
+            "companion.html", username=user.username, history=history, greeting=greeting()
+        )
+
+    @app.route("/companion/send", methods=["POST"])
+    def companion_send():
+        user = get_current_user()
+        body = request.form.get("body", "").strip()
+
+        if body:
+            user_msg = CompanionMessage(user_id=user.id, sender="user", body=body)
+            db.session.add(user_msg)
+            db.session.commit()
+
+            if check_for_crisis(body):
+                return render_template("crisis_resources.html")
+
+            reply = generate_reply(body)
+            companion_msg = CompanionMessage(user_id=user.id, sender="companion", body=reply)
+            db.session.add(companion_msg)
+            db.session.commit()
+
+        return redirect("/companion")
+    
 
     return app
-        
-        
+
+    

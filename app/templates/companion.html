@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <p class="identity">posting as {{ username }}</p>
+  <p class="journal-note">a space to talk things through — not a replacement for a real person, but here when you need it.</p>
+
+  <div class="card">
+    <div class="chat-thread">
+      {% if not history %}
+        <div class="chat-bubble chat-companion">{{ greeting }}</div>
+      {% endif %}
+      {% for msg in history %}
+        <div class="chat-bubble {{ 'chat-user' if msg.sender == 'user' else 'chat-companion' }}">{{ msg.body }}</div>
+      {% endfor %}
+    </div>
+
+    <form method="POST" action="/companion/send" class="encourage-form" style="margin-top:16px;">
+      <input type="text" name="body" placeholder="say what's on your mind..." required autofocus>
+      <button type="submit">send</button>
+    </form>
+  </div>
+{% endblock %}
