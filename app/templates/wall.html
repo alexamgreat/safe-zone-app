@@ -18,6 +18,7 @@
   <div class="feed">
     {% for e in encouragements %}
       <div class="post-card">
+        <p class="post-meta">{{ e.author.avatar }} {{ e.author.username }}</p>
         <p class="post-body">{{ e.body }}</p>
         <div class="reactions">
           {% for key, label in reaction_labels.items() %}

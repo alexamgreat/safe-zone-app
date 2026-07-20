@@ -23,6 +23,7 @@ class Post(db.Model):
     encouragements = db.relationship(
         "Encouragement", backref="post", order_by="Encouragement.created_at"
     )
+    author = db.relationship("User", foreign_keys=[user_id])
 
 
 class Reaction(db.Model):
@@ -39,10 +40,11 @@ class MentorRequest(db.Model):
     
 class Encouragement(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    post_id = db.Column(db.Integer, db.ForeignKey("post.id"), nullable=True)  # changed: nullable
+    post_id = db.Column(db.Integer, db.ForeignKey("post.id"), nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     body = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    author = db.relationship("User", foreign_keys=[user_id])
 
 
 class EncouragementReaction(db.Model):

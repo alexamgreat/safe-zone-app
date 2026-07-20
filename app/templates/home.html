@@ -60,7 +60,7 @@
     <h2 class="card-title">💬 All Shared Stories</h2>
     {% for post in recent_posts %}
       <div class="mini-post">
-        <p class="post-meta">{{ post.topic }}</p>
+        <p class="post-meta">{{ post.author.avatar }} {{ post.author.username }} · {{ post.topic }}</p>
         <p class="post-body">{{ post.body }}</p>
         <form method="POST" action="/post/{{ post.id }}/encourage" class="encourage-form" style="margin-top:10px;">
           <input type="text" name="body" placeholder="leave some encouragement..." required>

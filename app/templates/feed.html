@@ -25,7 +25,55 @@
     {% for post in posts %}
       <div class="post-card">
         <div class="card-header-row">
-          <p class="post-meta">posted anonymously · {{ post.topic }}</p>
+          <p class="post-meta">{{ post.author.avatar }} {{ post.author.username }} · {{ post.topic }}</p>
+          {% if post.created_at %}
+            <p class="post-meta">{{ post.created_at.strftime('%b %d, %Y %I:%M %p') }}</p>
+          {% endif %}
+          {% if post.updated_at %}
+            <p class="post-meta">(edited {{ post.updated_at.strftime('%b %d, %Y %I:%M %p') }})</p>
+          {% endif %}
+          {% if post.encouragements %}
+            <p class="post-meta">{{ post.encouragements|length }} encouragement{{ 's' if post.encouragements|length > 1 else '' }}</p>
+          {% endif %}
+          {% if post.reactions %}
+            <p class="post-meta">{{ post.reactions|length }} reaction{{ 's' if post.reactions|length > 1 else '' }}</p>
+          {% endif %}
+          {% if post.reactions %}
+            <div class="reaction-summary">
+              {% for reaction in post.reactions %}
+                <span class="reaction">{{ reaction.label }} ({{ reaction.count }})</span>
+              {% endfor %}
+            </div>
+          {% endif %}
+          {% if post.encouragements %}
+            <div class="encouragement-summary">
+              {% for encouragement in post.encouragements %}
+                <span class="encouragement">{{ encouragement.body }}</span>
+              {% endfor %}
+            </div>
+          {% endif %}
+          {% if post.reactions %}
+            <div class="reaction-summary">
+              {% for reaction in post.reactions %}
+                <span class="reaction">{{ reaction.label }} ({{ reaction.count }})</span>
+              {% endfor %}
+            </div>
+          {% endif %}
+          {% if post.encouragements %}
+            <div class="encouragement-summary">
+              {% for encouragement in post.encouragements %}
+                <span class="encouragement">{{ encouragement.body }}</span>
+              {% endfor %}
+            </div>
+          {% endif %}
+
+          {% if post.reactions %}
+            <div class="reaction-summary">
+              {% for reaction in post.reactions %}
+                <span class="reaction">{{ reaction.label }} ({{ reaction.count }})</span>
+              {% endfor %}
+            </div>
+          {% endif %}
           {% if post.user_id == current_user_id %}
             <div style="display:flex; gap:10px;">
               <a href="/post/{{ post.id }}/edit" class="card-link">edit</a>
