@@ -73,7 +73,7 @@ def create_app():
     def feed():
         user = get_current_user()
         posts = Post.query.order_by(Post.created_at.desc()).all()
-        return render_template("feed.html", username=user.username, posts=posts)
+        return render_template("feed.html", username=user.username, posts=posts, current_user_id=user.id)
 
     @app.route("/post", methods=["POST"])
     def create_post():
@@ -356,6 +356,46 @@ def create_app():
             db.session.commit()
 
         return redirect("/companion")
+    
+    @app.route("/post/<int:post_id>/edit", methods=["GET", "POST"])
+    def edit_post(post_id):
+        user = get_current_user()
+        post = Post.query.get_or_404(post_id)
+
+        if post.user_id != user.id:
+            flash("you can only edit your own posts.")
+            return redirect("/feed")
+
+        if request.method == "POST":
+            body = request.form.get("body", "").strip()
+            topic = request.form.get("topic")
+
+            if body:
+                post.body = body
+                post.topic = topic
+                db.session.commit()
+
+                if check_for_crisis(body):
+                    return render_template("crisis_resources.html")
+
+            return redirect("/feed")
+
+        return render_template("edit_post.html", username=user.username, post=post)
+
+    @app.route("/post/<int:post_id>/delete", methods=["POST"])
+    def delete_post(post_id):
+        user = get_current_user()
+        post = Post.query.get_or_404(post_id)
+
+        if post.user_id != user.id:
+            flash("you can only delete your own posts.")
+            return redirect("/feed")
+
+        Encouragement.query.filter_by(post_id=post.id).delete()
+        db.session.delete(post)
+        db.session.commit()
+
+        return redirect("/feed")
     
 
     return app

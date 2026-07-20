@@ -24,7 +24,17 @@
   <div class="feed">
     {% for post in posts %}
       <div class="post-card">
-        <p class="post-meta">posted anonymously · {{ post.topic }}</p>
+        <div class="card-header-row">
+          <p class="post-meta">posted anonymously · {{ post.topic }}</p>
+          {% if post.user_id == current_user_id %}
+            <div style="display:flex; gap:10px;">
+              <a href="/post/{{ post.id }}/edit" class="card-link">edit</a>
+              <form method="POST" action="/post/{{ post.id }}/delete" onsubmit="return confirm('delete this post?');" style="display:inline;">
+                <button type="submit" class="card-link" style="background:none; border:none; padding:0; cursor:pointer; color:var(--rose);">delete</button>
+              </form>
+            </div>
+          {% endif %}
+        </div>
         <p class="post-body">{{ post.body }}</p>
 
         {% if post.encouragements %}

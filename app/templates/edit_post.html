@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <p class="identity">posting as {{ username }}</p>
+  <p class="journal-note">edit your story</p>
+
+  <form method="POST" class="post-form">
+    <select name="topic" required>
+      <option value="school" {{ 'selected' if post.topic == 'school' }}>school</option>
+      <option value="family" {{ 'selected' if post.topic == 'family' }}>family</option>
+      <option value="friendships" {{ 'selected' if post.topic == 'friendships' }}>friendships</option>
+      <option value="anxiety" {{ 'selected' if post.topic == 'anxiety' }}>anxiety</option>
+      <option value="other" {{ 'selected' if post.topic == 'other' }}>other</option>
+    </select>
+    <textarea name="body" required>{{ post.body }}</textarea>
+    <button type="submit">save changes</button>
+  </form>
+
+  <a href="/feed" class="card-link">← back to feed</a>
+{% endblock %}
