@@ -16,3 +16,17 @@ def is_supportive(text):
         if phrase in lowered:
             return False, "that language isn't allowed here — try rephrasing with kindness."
     return True, None
+
+def is_valid_nickname(name):
+    """Returns (True, None) if valid, or (False, reason) if not."""
+    name = name.strip()
+    if not (2 <= len(name) <= 20):
+        return False, "nickname must be between 2 and 20 characters."
+    if not all(c.isalnum() or c in " _-" for c in name):
+        return False, "nickname can only contain letters, numbers, spaces, - and _."
+    lowered = name.lower()
+    for phrase in BLOCKED_PHRASES:
+        if phrase in lowered:
+            return False, "please choose a kinder nickname."
+    return True, None
+

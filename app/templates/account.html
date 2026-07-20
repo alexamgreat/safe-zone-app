@@ -5,7 +5,13 @@
   <p class="journal-note">your username and history stay exactly the same — this page never shows your identity to anyone else.</p>
 
   <div class="card">
-    <h2 class="card-title">Choose an avatar</h2>
+    <h2 class="card-title">Your nickname</h2>
+    <p class="journal-note">how you're shown to the community — still fully anonymous.</p>
+    <form method="POST" action="/account/nickname" class="post-form" style="flex-direction:row;">
+      <input type="text" name="nickname" value="{{ user.username }}" maxlength="20" required style="flex:1;">
+      <button type="submit" style="width:auto; padding:0 20px;">save</button>
+    </form>
+  </div>
     <p class="journal-note">a preset animal face only — never a real photo.</p>
     <form method="POST" action="/account/avatar" class="avatar-grid">
       {% for a in avatars %}

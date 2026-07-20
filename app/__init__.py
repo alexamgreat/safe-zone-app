@@ -2,7 +2,6 @@ from datetime import datetime
 from flask import Flask, render_template, request, redirect, flash, session
 from flask_migrate import Migrate
 from config import Config
-from app.models import db, Post, Encouragement, EncouragementReaction, JournalEntry, MoodCheckIn
 from app.auth import get_current_user, signup, login, logout
 from app.moderation import is_supportive
 from app.crisis import check_for_crisis
@@ -11,6 +10,8 @@ from app.mood import MOODS, HEAVY_MOODS, calculate_streak
 from app.quotes import quote_of_the_day
 from app.presets import ENCOURAGEMENT_PRESETS
 from app.avatars import AVATARS
+from app.moderation import is_supportive, is_valid_nickname
+from app.models import db, Post, Encouragement, EncouragementReaction, JournalEntry, MoodCheckIn, User
 
 REACTION_LABELS = {
     "helped": "❤️ Helped me",
@@ -303,6 +304,26 @@ def create_app():
     def account_logout():
         logout()
         return redirect("/welcome")
+    
+    
+    @app.route("/account/nickname", methods=["POST"])
+    def set_nickname():
+        user = get_current_user()
+        nickname = request.form.get("nickname", "").strip()
+
+        ok, reason = is_valid_nickname(nickname)
+        if not ok:
+            flash(reason)
+            return redirect("/account")
+
+        if User.query.filter(User.username == nickname, User.id != user.id).first():
+            flash("that nickname is already taken.")
+            return redirect("/account")
+
+        user.username = nickname
+        db.session.commit()
+        flash("nickname updated!")
+        return redirect("/account")
 
     return app
         
