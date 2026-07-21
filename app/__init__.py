@@ -2,7 +2,8 @@ from datetime import datetime
 from flask import Flask, render_template, request, redirect, flash, session
 from flask_migrate import Migrate
 from config import Config
-from app.auth import get_current_user, signup, login, logout
+from app.models import db, Post, Encouragement, EncouragementReaction, JournalEntry, MoodCheckIn, User, CompanionMessage
+from app.auth import get_current_user, signup, login, logout, reset_password
 from app.moderation import is_supportive
 from app.crisis import check_for_crisis
 from app.journal import CATEGORIES
@@ -10,9 +11,8 @@ from app.mood import MOODS, HEAVY_MOODS, calculate_streak
 from app.quotes import quote_of_the_day
 from app.presets import ENCOURAGEMENT_PRESETS
 from app.avatars import AVATARS
-from app.moderation import is_supportive, is_valid_nickname
-from app.models import db, Post, Encouragement, EncouragementReaction, JournalEntry, MoodCheckIn, User, CompanionMessage
 from app.companion import generate_reply, greeting
+from app.mail import mail, generate_reset_token, verify_reset_token, send_reset_email
 
 REACTION_LABELS = {
     "helped": "❤️ Helped me",
@@ -29,8 +29,12 @@ def create_app():
 
     db.init_app(app)
     migrate.init_app(app, db)
+    mail.init_app(app)
 
-    PUBLIC_ENDPOINTS = {"welcome", "do_signup", "do_login", "static"}
+    PUBLIC_ENDPOINTS = {
+        "welcome", "do_signup", "do_login", "static",
+        "forgot_password_page", "forgot_password", "reset_with_token"
+    }
 
     @app.before_request
     def require_login():
@@ -67,6 +71,7 @@ def create_app():
             wall_preview=wall_preview,
             stats=stats,
             today=today,
+            current_user_id=user.id,
         )
 
     @app.route("/feed")
@@ -88,6 +93,46 @@ def create_app():
 
             if check_for_crisis(body):
                 return render_template("crisis_resources.html")
+
+        return redirect("/feed")
+
+    @app.route("/post/<int:post_id>/edit", methods=["GET", "POST"])
+    def edit_post(post_id):
+        user = get_current_user()
+        post = Post.query.get_or_404(post_id)
+
+        if post.user_id != user.id:
+            flash("you can only edit your own posts.")
+            return redirect("/feed")
+
+        if request.method == "POST":
+            body = request.form.get("body", "").strip()
+            topic = request.form.get("topic")
+
+            if body:
+                post.body = body
+                post.topic = topic
+                db.session.commit()
+
+                if check_for_crisis(body):
+                    return render_template("crisis_resources.html")
+
+            return redirect("/feed")
+
+        return render_template("edit_post.html", username=user.username, post=post)
+
+    @app.route("/post/<int:post_id>/delete", methods=["POST"])
+    def delete_post(post_id):
+        user = get_current_user()
+        post = Post.query.get_or_404(post_id)
+
+        if post.user_id != user.id:
+            flash("you can only delete your own posts.")
+            return redirect("/feed")
+
+        Encouragement.query.filter_by(post_id=post.id).delete()
+        db.session.delete(post)
+        db.session.commit()
 
         return redirect("/feed")
 
@@ -253,78 +298,6 @@ def create_app():
             presets=ENCOURAGEMENT_PRESETS,
         )
 
-    @app.route("/account")
-    def account():
-        user = get_current_user()
-        return render_template("account.html", user=user, avatars=AVATARS)
-
-    @app.route("/account/avatar", methods=["POST"])
-    def set_avatar():
-        user = get_current_user()
-        avatar = request.form.get("avatar")
-        if avatar in AVATARS:
-            user.avatar = avatar
-            db.session.commit()
-        return redirect("/account")
-
-    @app.route("/welcome")
-    def welcome():
-        if get_current_user():
-            return redirect("/")
-        return render_template("welcome.html")
-
-    @app.route("/welcome/signup", methods=["POST"])
-    def do_signup():
-        email = request.form.get("email", "")
-        password = request.form.get("password", "")
-
-        if not email or not password:
-            flash("please fill in both fields.")
-            return redirect("/welcome")
-
-        user, error = signup(email, password)
-        if error:
-            flash(error)
-            return redirect("/welcome")
-
-        return redirect("/")
-
-    @app.route("/welcome/login", methods=["POST"])
-    def do_login():
-        email = request.form.get("email", "")
-        password = request.form.get("password", "")
-
-        user, error = login(email, password)
-        if error:
-            flash(error)
-            return redirect("/welcome")
-
-        return redirect("/")
-
-    @app.route("/account/logout", methods=["POST"])
-    def account_logout():
-        logout()
-        return redirect("/welcome")
-    
-    
-    @app.route("/account/nickname", methods=["POST"])
-    def set_nickname():
-        user = get_current_user()
-        nickname = request.form.get("nickname", "").strip()
-
-        ok, reason = is_valid_nickname(nickname)
-        if not ok:
-            flash(reason)
-            return redirect("/account")
-
-        if User.query.filter(User.username == nickname, User.id != user.id).first():
-            flash("that nickname is already taken.")
-            return redirect("/account")
-
-        user.username = nickname
-        db.session.commit()
-        flash("nickname updated!")
-        return redirect("/account")
     @app.route("/companion")
     def companion():
         user = get_current_user()
@@ -356,48 +329,105 @@ def create_app():
             db.session.commit()
 
         return redirect("/companion")
-    
-    @app.route("/post/<int:post_id>/edit", methods=["GET", "POST"])
-    def edit_post(post_id):
-        user = get_current_user()
-        post = Post.query.get_or_404(post_id)
 
-        if post.user_id != user.id:
-            flash("you can only edit your own posts.")
-            return redirect("/feed")
+    @app.route("/account")
+    def account():
+        user = get_current_user()
+        return render_template("account.html", user=user, avatars=AVATARS)
+
+    @app.route("/account/avatar", methods=["POST"])
+    def set_avatar():
+        user = get_current_user()
+        avatar = request.form.get("avatar")
+        if avatar in AVATARS:
+            user.avatar = avatar
+            db.session.commit()
+        return redirect("/account")
+
+    @app.route("/account/nickname", methods=["POST"])
+    def set_nickname():
+        from app.moderation import is_valid_nickname
+        user = get_current_user()
+        nickname = request.form.get("nickname", "").strip()
+
+        ok, reason = is_valid_nickname(nickname)
+        if not ok:
+            flash(reason)
+            return redirect("/account")
+
+        if User.query.filter(User.username == nickname, User.id != user.id).first():
+            flash("that nickname is already taken.")
+            return redirect("/account")
+
+        user.username = nickname
+        db.session.commit()
+        flash("nickname updated!")
+        return redirect("/account")
+
+    @app.route("/welcome")
+    def welcome():
+        if get_current_user():
+            return redirect("/")
+        return render_template("welcome.html")
+
+    @app.route("/welcome/signup", methods=["POST"])
+    def do_signup():
+        nickname = request.form.get("nickname", "")
+        password = request.form.get("password", "")
+        email = request.form.get("email", "").strip()
+
+        if not nickname or not password:
+            flash("please fill in both fields.")
+            return redirect("/welcome")
+
+        user, error = signup(nickname, password, email or None)
+        if error:
+            flash(error)
+            return redirect("/welcome")
+
+        return redirect("/")
+
+    @app.route("/welcome/login", methods=["POST"])
+    def do_login():
+        nickname = request.form.get("nickname", "")
+        password = request.form.get("password", "")
+
+        user, error = login(nickname, password)
+        if error:
+            flash(error)
+            return redirect("/welcome")
+
+        return redirect("/")
+
+    @app.route("/welcome/forgot", methods=["POST"])
+    def forgot_password():
+        email = request.form.get("email", "").strip().lower()
+        user = User.query.filter_by(email=email).first()
+
+        if user:
+            token = generate_reset_token(email)
+            send_reset_email(email, token)
+
+        # always show the same message, whether or not the email exists —
+        # this stops someone from checking which emails have accounts here
+        flash("if that email is linked to an account, a reset link has been sent.")
+        return redirect("/welcome")
+
+    @app.route("/welcome/reset/<token>", methods=["GET", "POST"])
+    def reset_with_token(token):
+        email = verify_reset_token(token)
+        if not email:
+            flash("that reset link is invalid or has expired.")
+            return redirect("/welcome/forgot")
 
         if request.method == "POST":
-            body = request.form.get("body", "").strip()
-            topic = request.form.get("topic")
+            new_password = request.form.get("new_password", "")
+            user, error = reset_password(email, new_password)
+            if error:
+                flash(error)
+                return redirect(f"/welcome/reset/{token}")
+            flash("password reset — you can log in with your nickname now.")
+            return redirect("/welcome")
 
-            if body:
-                post.body = body
-                post.topic = topic
-                db.session.commit()
-
-                if check_for_crisis(body):
-                    return render_template("crisis_resources.html")
-
-            return redirect("/feed")
-
-        return render_template("edit_post.html", username=user.username, post=post)
-
-    @app.route("/post/<int:post_id>/delete", methods=["POST"])
-    def delete_post(post_id):
-        user = get_current_user()
-        post = Post.query.get_or_404(post_id)
-
-        if post.user_id != user.id:
-            flash("you can only delete your own posts.")
-            return redirect("/feed")
-
-        Encouragement.query.filter_by(post_id=post.id).delete()
-        db.session.delete(post)
-        db.session.commit()
-
-        return redirect("/feed")
-    
-
+        return render_template("reset_password.html", token=token)
     return app
-
-    

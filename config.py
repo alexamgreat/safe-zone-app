@@ -19,5 +19,13 @@ class Config:
     SECRET_KEY = os.environ.get("SECRET_KEY", "dev-key-not-safe")
     SQLALCHEMY_DATABASE_URI = database_url or "sqlite:///" + os.path.join(
         BASE_DIR, "instance", "safezone.db"
-    )
+    )               
+    MAIL_SERVER = "smtp.gmail.com"
+    MAIL_PORT = 587
+    MAIL_USE_TLS = True
+    MAIL_USERNAME = os.environ.get("MAIL_USERNAME")
+    MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD")
+    MAIL_DEFAULT_SENDER = os.environ.get("MAIL_USERNAME")    
+    MAIL_SUPPRESS_SEND = False
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    
